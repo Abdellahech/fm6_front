@@ -1,117 +1,69 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function Login() {
-  const [formData, setFormData] = useState({
-    username: '',
-    passwordHash: ''
+const Login = () => {
+  const [role, setRole] = useState('adherent');
+  const [credentials, setCredentials] = useState({
+    email: '',
+    password: ''
   });
 
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-
   const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
-    setError('');
 
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/login', formData, {
-        headers: { 'Content-Type': 'application/json' },
-        responseType: 'text' // important if backend sends raw string
-      });
+      const response = await axios.post(`http://localhost:8080/api/login/${role}`, credentials);
+      const token = response.data.token; // assuming backend returns token
 
-      localStorage.setItem('token', response.data); // save token
-      setMessage('Login successful! You are now authenticated.');
-    } catch (err) {
-      setError(err.response?.data || 'Login failed. Please try again.');
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);
+
+      alert('Login successful as ' + role);
+      // redirect (based on role)
+      window.location.href = `/${role}/dashboard`;
+
+    } catch (error) {
+      console.error('Login error:', error.response?.data || error.message);
+      alert('Login failed');
     }
   };
 
   return (
-    <div style={styles.container}>
-      <form onSubmit={handleSubmit} style={styles.card}>
-        <h2 style={styles.title}>Login</h2>
-
-        {message && <p style={styles.success}>{message}</p>}
-        {error && <p style={styles.error}>{error}</p>}
+    <div>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <label>Login as:</label>
+        <select value={role} onChange={(e) => setRole(e.target.value)}>
+          <option value="adherent">Adherent</option>
+          <option value="adjacent">Adjacent</option>
+          <option value="enfant">Enfant</option>
+        </select>
 
         <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={formData.username}
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={credentials.email}
           onChange={handleChange}
           required
-          style={styles.input}
         />
         <input
           type="password"
-          name="passwordHash"
+          name="password"
           placeholder="Password"
-          value={formData.passwordHash}
+          value={credentials.password}
           onChange={handleChange}
           required
-          style={styles.input}
         />
-        <button type="submit" style={styles.button}>Log In</button>
+
+        <button type="submit">Login</button>
       </form>
     </div>
   );
-}
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    background: '#f7f7f7',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  card: {
-    background: '#fff',
-    padding: '30px',
-    borderRadius: '10px',
-    boxShadow: '0 6px 15px rgba(0,0,0,0.1)',
-    width: '300px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px',
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: '24px',
-    marginBottom: '10px',
-    color: '#333',
-  },
-  input: {
-    padding: '10px',
-    borderRadius: '5px',
-    border: '1px solid #ccc',
-    fontSize: '14px',
-  },
-  button: {
-    padding: '10px',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    fontSize: '16px',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-  },
-  success: {
-    color: 'green',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  error: {
-    color: 'red',
-    textAlign: 'center',
-  },
 };
 
 export default Login;
