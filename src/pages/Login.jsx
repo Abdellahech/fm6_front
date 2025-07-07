@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [role, setRole] = useState('adherent');
@@ -7,6 +8,7 @@ const Login = () => {
     email: '',
     password: ''
   });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -17,14 +19,25 @@ const Login = () => {
 
     try {
       const response = await axios.post(`http://localhost:8080/api/login/${role}`, credentials);
-      const token = response.data.token; // assuming backend returns token
+      const token = response.data.token;
+      const userId = response.data.userId;
+
+      console.log("Login response:", response.data);
 
       localStorage.setItem('token', token);
       localStorage.setItem('role', role);
+      localStorage.setItem('userId', userId);
 
       alert('Login successful as ' + role);
-      // redirect (based on role)
-      window.location.href = `/${role}/dashboard`;
+
+      // ✅ Redirect based on role with correct routes
+      if (role === 'adherent') {
+        navigate('/profile');
+      } else if (role === 'adjacent') {
+        navigate('/adjacent/profile');
+      } else if (role === 'enfant') {
+        navigate('/enfant/profile');
+      }
 
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);
