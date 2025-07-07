@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# JVM crash logs
+hs_err_pid*.log
+replay_pid*.log
